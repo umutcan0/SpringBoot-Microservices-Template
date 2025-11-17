@@ -13,9 +13,14 @@ public class Note {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(nullable = false, length = 200)
     private String title;
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
+    @Column(nullable = false, updatable = false)
     private Date createdAt;
+    @Column(nullable = false)
+    private Date updatedAt;
     private boolean completed;
 
     public Note() {
@@ -30,6 +35,18 @@ public class Note {
         this.title = dto.getTitle();
         this.content = dto.getContent();
         this.completed = dto.isCompleted();
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        Date now = new Date();
+        this.createdAt = now;
+        this.updatedAt = now;  // ilk oluşturmada eşit olsun
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = new Date();   //otomatik güncellenir
     }
 
 
@@ -49,11 +66,6 @@ public class Note {
 
     public void setContent(String content) {
         this.content = content;
-    }
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = new Date();
     }
 
     public Date getCreatedAt() {

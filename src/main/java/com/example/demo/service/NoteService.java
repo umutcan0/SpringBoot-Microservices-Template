@@ -6,8 +6,12 @@ import com.example.demo.exception.DuplicateNoteTitleException;
 import com.example.demo.exception.NoteNotFoundException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Note;
+import com.example.demo.payload.ApiResponse;
 import com.example.demo.repository.NoteRepository;
+import com.example.demo.validation.ValidationUtils;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -41,28 +45,38 @@ public class NoteService {
         return noteRepository.findAll();
     }
 
+    @Transactional
     @CacheEvict(value = "notes", allEntries = true)
-    public void deleteNoteById(Long id) {
+    public ApiResponse<Void> deleteNoteById(Long id) {
+
         Note note = noteRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Note not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Note not found with id: " + id));
+
         noteRepository.delete(note);
+
+        return ApiResponse.success(null, "Note deleted successfully");
     }
-    @CacheEvict(value = "noteById", key = "#id")
-    public NoteDto updateNote(Long id, NoteDto updatedNoteDto) {
-        Note existingNote = noteRepository.findById(id)
+
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "noteById", key = "#id"),
+            @CacheEvict(value = "notes", allEntries = true)
+    })
+    public NoteDto updateNote(Long id, NoteDto dto) {
+
+        if (dto.getTitle().equals("err")) {
+            throw new RuntimeException("test rollback");
+        }
+
+        Note existing = noteRepository.findById(id)
                 .orElseThrow(() -> new NoteNotFoundException(id));
 
-        // DTO → Entity
-        Note updatedEntity = noteMapper.toEntity(updatedNoteDto);
+        existing.setTitle(dto.getTitle());
+        existing.setContent(dto.getContent());
+        existing.setCompleted(dto.isCompleted());
 
-        existingNote.setTitle(updatedEntity.getTitle());
-        existingNote.setContent(updatedEntity.getContent());
-        existingNote.setCompleted(updatedEntity.isCompleted());
-
-        Note savedNote = noteRepository.save(existingNote);
-
-        // Entity → DTO
-        return noteMapper.toDto(savedNote);
+        Note saved = noteRepository.save(existing);
+        return noteMapper.toDto(saved);
     }
 
 
@@ -109,27 +123,26 @@ public class NoteService {
                 .map(noteMapper::toDto);
     }
 
-    public NoteDto createNote(NoteDto dto) {
-        logger.info("Yeni not oluşturuluyor: {}", dto.getTitle());
+    public ApiResponse<NoteDto> createNote(NoteDto dto) {
 
-        try {
-            logger.debug("Kaydedilecek not içeriği: {}", dto);
-            Note note = noteMapper.toEntity(dto);
-            Note saved = noteRepository.save(note);
-            logger.info("Not kaydedildi, id: {}", saved.getId());
-            return noteMapper.toDto(saved);
+        ValidationUtils.requireNotBlank(dto.getTitle(), "title");
+        ValidationUtils.requireNotBlank(dto.getContent(), "content");
 
-        } catch (Exception e) {
-            logger.error("Not oluşturma sırasında hata oluştu: {}", e.getMessage(), e);
-            throw e;
-        }
+        Note note = noteMapper.toEntity(dto);
+        noteRepository.save(note);
+
+        return ApiResponse.success(null, "Note deleted successfully");
     }
+
 
 
     @Cacheable(value = "noteById", key = "#id")
     public NoteDto getNoteById(Long id) {
+
         Note note = noteRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Note", id));
+                .orElseThrow(() -> new ResourceNotFoundException("Note not found with id: " + id));
+
         return noteMapper.toDto(note);
     }
+
 }

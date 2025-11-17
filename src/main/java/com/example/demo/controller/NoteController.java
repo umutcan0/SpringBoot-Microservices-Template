@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.dto.NoteDto;
 import com.example.demo.exception.NoteNotFoundException;
 import com.example.demo.model.Note;
+import com.example.demo.payload.ApiResponse;
 import com.example.demo.service.NoteService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -36,9 +37,11 @@ public class NoteController {
     }
 
     @PostMapping
-    public ResponseEntity<NoteDto> createNote(@Valid @RequestBody NoteDto noteDto) {
-        NoteDto createdNote = noteService.createNote(noteDto);
-        return new ResponseEntity<>(createdNote, HttpStatus.CREATED);
+    public ResponseEntity<ApiResponse<NoteDto>> createNote(
+            @Valid @RequestBody NoteDto noteDto) {
+
+        ApiResponse<NoteDto> response = noteService.createNote(noteDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @DeleteMapping("/{id}")
