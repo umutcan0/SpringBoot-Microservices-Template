@@ -32,5 +32,16 @@ The project was developed step-by-step, applying real-world backend engineering 
 
 ---
 
-## 📂 Project Structure
+🤝 Contribution
 
+Feel free to fork this project and submit a pull request! If you have suggestions or found a bug, open an issue. 🚀
+
+📜 License
+
+This project is licensed under the MIT License.
+
+📌 Author
+
+Umut Can BAL - Java |Spring Boot - Backend Developer | Passionate about Microservices & Scalable Applications
+
+🎬 Happy Coding! 🚀
