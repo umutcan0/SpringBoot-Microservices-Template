@@ -5,6 +5,8 @@ import com.example.demo.dto.NoteDto;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.time.LocalDateTime;
+
 
 import java.util.Date;
 
@@ -21,6 +23,8 @@ public class Note {
     private Date createdAt;
     @Column(nullable = false)
     private Date updatedAt;
+    @Column
+    private LocalDateTime deletedAt;
     private boolean completed;
 
     public Note() {
@@ -74,21 +78,24 @@ public class Note {
     private void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
-
-
     public String getTitle() {
         return title;
     }
-
     public void setTitle(String title) {
         this.title = title;
     }
-
     public boolean isCompleted() {
         return completed;
     }
-
     public void setCompleted(boolean completed) {
         this.completed = completed;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 }

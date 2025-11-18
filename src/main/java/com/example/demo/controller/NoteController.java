@@ -99,7 +99,10 @@ public class NoteController {
         return ResponseEntity.ok(result);
     }
 
-
+    @PutMapping("/{id}/restore")
+    public ApiResponse<NoteDto> restore(@PathVariable Long id) {
+        return noteService.restoreNote(id);
+    }
 
     /*@ExceptionHandler(NoteNotFoundException.class)
     public ResponseEntity<String> handleNoteNotFound(NoteNotFoundException ex) {
