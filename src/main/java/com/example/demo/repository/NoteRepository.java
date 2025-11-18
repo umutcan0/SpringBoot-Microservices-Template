@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface NoteRepository extends JpaRepository<Note, Long> {
@@ -35,8 +36,9 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
     Page<Note> searchNotes(@Param("keyword") String keyword,
                            @Param("completed") Boolean completed,
                            Pageable pageable);
-
     boolean existsByTitle(String title);
+    List<Note> findAllByDeletedAtIsNull();
+    Optional<Note> findByIdAndDeletedAtIsNotNull(Long id);
 
 
 }
