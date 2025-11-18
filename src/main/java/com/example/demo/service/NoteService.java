@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 import com.example.demo.mapper.NoteMapper;
 
 
-import java.time.LocalDateTime;
+
 import java.util.Date;
 import java.util.List;
 
@@ -41,9 +41,8 @@ public class NoteService {
     }
 
     @Cacheable("notes")
-    public ApiResponse<List<Note>> getAllNotes() {
-        List<Note> notes = noteRepository.findAllByDeletedAtIsNull();
-        return ApiResponse.success(notes, "Notes listed successfully");
+    public List<Note> getAllNotes() {
+        return noteRepository.findAll();
     }
 
     @Transactional
@@ -51,12 +50,11 @@ public class NoteService {
     public ApiResponse<Void> deleteNoteById(Long id) {
 
         Note note = noteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Note not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Note not found with id: " + id));
 
-        note.setDeletedAt(LocalDateTime.now());
-        noteRepository.save(note);
+        noteRepository.delete(note);
 
-        return ApiResponse.success(null, "Note deleted successfully (soft delete)");
+        return ApiResponse.success(null, "Note deleted successfully");
     }
 
     @Transactional
@@ -136,6 +134,8 @@ public class NoteService {
         return ApiResponse.success(null, "Note deleted successfully");
     }
 
+
+
     @Cacheable(value = "noteById", key = "#id")
     public NoteDto getNoteById(Long id) {
 
@@ -144,16 +144,5 @@ public class NoteService {
 
         return noteMapper.toDto(note);
     }
-    @Transactional
-    public ApiResponse<NoteDto> restoreNote(Long id) {
-        Note note = noteRepository.findByIdAndDeletedAtIsNotNull(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Deleted Note", id));
-
-        note.setDeletedAt(null); // ✔ geri getirdik
-        Note saved = noteRepository.save(note);
-
-        return ApiResponse.success("Note restored successfully", noteMapper.toDto(saved));
-    }
-
 
 }
