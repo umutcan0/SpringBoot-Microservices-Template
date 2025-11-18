@@ -149,11 +149,10 @@ public class NoteService {
         Note note = noteRepository.findByIdAndDeletedAtIsNotNull(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Deleted Note", id));
 
-        note.setDeletedAt(null); // ✔ geri getirdik
+        note.setDeletedAt(null); // geri getirdik
         Note saved = noteRepository.save(note);
 
-        return ApiResponse.success("Note restored successfully", noteMapper.toDto(saved));
-    }
+        return ApiResponse.success(noteMapper.toDto(saved), "Note restored successfully");    }
 
 
 }
