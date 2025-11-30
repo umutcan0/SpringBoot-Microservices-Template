@@ -31,7 +31,7 @@ public class NoteController {
     }
 
     @GetMapping
-    public List<Note> getAllNotes() {
+    public ApiResponse<List<Note>> getAllNotes() {
         logger.info("Tüm notlar getiriliyor...");
         return noteService.getAllNotes();
     }
@@ -71,13 +71,13 @@ public class NoteController {
     }
 
     @GetMapping("/paged")
-    public Page<NoteDto> getPagedNotes(
+    public ApiResponse<Page<NoteDto>> getNotesPaged(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size,
-            @RequestParam(defaultValue = "id,asc") String[] sort
+            @RequestParam(defaultValue = "10") int size
     ) {
-        return noteService.getPagedNotes(page, size, sort);
+        return noteService.getNotesPaged(page, size);
     }
+
 
     @GetMapping("/filter")
     public ResponseEntity<List<NoteDto>> filterNotes(

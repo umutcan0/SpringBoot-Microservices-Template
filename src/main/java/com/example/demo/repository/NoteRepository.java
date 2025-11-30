@@ -39,6 +39,6 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
     boolean existsByTitle(String title);
     List<Note> findAllByDeletedAtIsNull();
     Optional<Note> findByIdAndDeletedAtIsNotNull(Long id);
-
+    Page<Note> findAllByDeletedAtIsNull(Pageable pageable);
 
 }

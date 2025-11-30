@@ -94,20 +94,18 @@ public class NoteService {
         return noteRepository.findAllByOrderByCreatedAtDesc();
     }
 
-    public Page<NoteDto> getPagedNotes(int page, int size, String[] sort) {
-        // sort parametresini ayır
-        String sortField = sort[0];
-        String sortDirection = sort.length > 1 ? sort[1] : "asc";
+    @Cacheable(value = "notesPaged", key = "#page + '-' + #size")
+    public ApiResponse<Page<NoteDto>> getNotesPaged(int page, int size) {
 
-        Sort.Direction direction = sortDirection.equalsIgnoreCase("desc")
-                ? Sort.Direction.DESC
-                : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
+        Page<Note> notes = noteRepository.findAllByDeletedAtIsNull(pageable);
 
-        return noteRepository.findAll(pageable)
-                .map(noteMapper::toDto);
+        Page<NoteDto> dtoPage = notes.map(noteMapper::toDto);
+
+        return ApiResponse.success(dtoPage, "Notes listed with pagination");
     }
+
 
     public List<NoteDto> filterNotes(String keyword, Boolean completed, String sortDir) {
         Sort sort = sortDir != null && sortDir.equalsIgnoreCase("desc") ?
