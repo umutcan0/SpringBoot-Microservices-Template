@@ -15,6 +15,7 @@ The project was developed step-by-step, applying real-world backend engineering 
 - Layered architecture (Controller → Service → Repository)
 - H2 in-memory database
 - Soft delete
+- Pagination
 
 ---
 
