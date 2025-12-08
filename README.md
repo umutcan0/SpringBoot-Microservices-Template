@@ -16,6 +16,7 @@ The project was developed step-by-step, applying real-world backend engineering 
 - H2 in-memory database
 - Soft delete
 - Pagination
+- Logging
 
 ---
 
