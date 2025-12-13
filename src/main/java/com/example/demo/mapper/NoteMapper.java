@@ -1,18 +1,24 @@
 package com.example.demo.mapper;
 
+import com.example.demo.dto.*;
 import com.example.demo.model.Note;
-import com.example.demo.dto.NoteDto;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring",
+        unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface NoteMapper {
-
-    NoteDto toDto(Note note);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "deletedAt", ignore = true)
-    Note toEntity(NoteDto dto);
+    Note toEntity(NoteCreateDto dto);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
+    void updateEntityFromDto(NoteUpdateDto dto, @MappingTarget Note entity);
+
+    NoteResponseDto toResponseDto(Note note);
 }

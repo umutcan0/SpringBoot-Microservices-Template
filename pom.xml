@@ -86,7 +86,6 @@
 
 	<build>
 		<plugins>
-			<!-- MapStruct + Lombok annotation processors -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -96,21 +95,19 @@
 					<target>17</target>
 
 					<annotationProcessorPaths>
-
-						<!-- MapStruct Processor -->
-						<path>
-							<groupId>org.mapstruct</groupId>
-							<artifactId>mapstruct-processor</artifactId>
-							<version>1.5.5.Final</version>
-						</path>
-
-						<!-- ⭐ BURASI EKLENİYOR (Lombok processor) ⭐ -->
+						<!-- Lombok FIRST -->
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
 							<version>1.18.30</version>
 						</path>
 
+						<!-- MapStruct SECOND -->
+						<path>
+							<groupId>org.mapstruct</groupId>
+							<artifactId>mapstruct-processor</artifactId>
+							<version>1.5.5.Final</version>
+						</path>
 					</annotationProcessorPaths>
 
 				</configuration>

@@ -1,6 +1,9 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.NoteCreateDto;
 import com.example.demo.dto.NoteDto;
+import com.example.demo.dto.NoteResponseDto;
+import com.example.demo.dto.NoteUpdateDto;
 import com.example.demo.exception.NoteNotFoundException;
 import com.example.demo.model.Note;
 import com.example.demo.payload.ApiResponse;
@@ -37,10 +40,10 @@ public class NoteController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<NoteDto>> createNote(
-            @Valid @RequestBody NoteDto noteDto) {
+    public ResponseEntity<ApiResponse<NoteResponseDto>> createNote(
+            @Valid @RequestBody NoteCreateDto noteDto) {
 
-        ApiResponse<NoteDto> response = noteService.createNote(noteDto);
+        ApiResponse<NoteResponseDto> response = noteService.createNote(noteDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -52,11 +55,11 @@ public class NoteController {
 
 
     @PutMapping("/{id}")
-    public ResponseEntity<NoteDto> updateNote(
+    public ResponseEntity<NoteResponseDto> updateNote(
             @PathVariable Long id,
-            @Valid @RequestBody NoteDto updatedNoteDto) {
+            @Valid @RequestBody NoteUpdateDto updatedNoteDto) {
 
-        NoteDto updatedNote = noteService.updateNote(id, updatedNoteDto);
+        NoteResponseDto  updatedNote = noteService.updateNote(id, updatedNoteDto);
         return ResponseEntity.ok(updatedNote);
     }
 
@@ -71,7 +74,7 @@ public class NoteController {
     }
 
     @GetMapping("/paged")
-    public ApiResponse<Page<NoteDto>> getNotesPaged(
+    public ApiResponse<Page<NoteResponseDto>> getNotesPaged(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
@@ -80,7 +83,7 @@ public class NoteController {
 
 
     @GetMapping("/filter")
-    public ResponseEntity<List<NoteDto>> filterNotes(
+    public ResponseEntity<List<NoteResponseDto>> filterNotes(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Boolean completed,
             @RequestParam(required = false, defaultValue = "asc") String sort) {
@@ -88,20 +91,40 @@ public class NoteController {
         return ResponseEntity.ok(noteService.filterNotes(keyword, completed, sort));
     }
 
-    @GetMapping("/search")
-    public ResponseEntity<Page<NoteDto>> searchNotes(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Boolean completed,
-            @PageableDefault(page = 0, size = 5, sort = "createdAt", direction = Sort.Direction.DESC)
-            Pageable pageable) {
+//    @GetMapping("/search")
+//    public ResponseEntity<Page<NoteDto>> searchNotes(
+//            @RequestParam(required = false) String keyword,
+//            @PageableDefault(page = 0, size = 5, sort = "createdAt", direction = Sort.Direction.DESC)
+//            Pageable pageable) {
+//
+//        Page<NoteDto> result = noteService.searchNotes(keyword, pageable);
+//        return ResponseEntity.ok(result);
+//    }
 
-        Page<NoteDto> result = noteService.searchNotes(keyword, completed, pageable);
-        return ResponseEntity.ok(result);
+    @GetMapping("/search")
+    public Page<NoteResponseDto> searchNotes(
+            @RequestParam String keyword,
+            @PageableDefault(
+                    page = 0,
+                    size = 5,
+                    sort = "createdAt",
+                    direction = Sort.Direction.DESC
+            )
+            Pageable pageable
+    ) {
+        return noteService.searchNotes(keyword,pageable);
     }
 
+
     @PutMapping("/{id}/restore")
-    public ApiResponse<NoteDto> restore(@PathVariable Long id) {
+    public ApiResponse<NoteResponseDto> restore(@PathVariable Long id) {
         return noteService.restoreNote(id);
+    }
+
+    // NOTE: This endpoint should be restricted to admin users only
+    @DeleteMapping("/{id}/hardDelete")
+    public ApiResponse<Void> hardDelete(@PathVariable Long id) {
+        return noteService.hardDelete(id);
     }
 
     /*@ExceptionHandler(NoteNotFoundException.class)

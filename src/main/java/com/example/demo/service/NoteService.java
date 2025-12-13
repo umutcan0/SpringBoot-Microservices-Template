@@ -1,7 +1,10 @@
 package com.example.demo.service;
 
 //import com.example.demo.exception.NoteNotFoundException;
+import com.example.demo.dto.NoteCreateDto;
 import com.example.demo.dto.NoteDto;
+import com.example.demo.dto.NoteResponseDto;
+import com.example.demo.dto.NoteUpdateDto;
 import com.example.demo.exception.DuplicateNoteTitleException;
 import com.example.demo.exception.NoteNotFoundException;
 import com.example.demo.exception.ResourceNotFoundException;
@@ -27,6 +30,7 @@ import com.example.demo.mapper.NoteMapper;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class NoteService {
@@ -64,21 +68,15 @@ public class NoteService {
             @CacheEvict(value = "noteById", key = "#id"),
             @CacheEvict(value = "notes", allEntries = true)
     })
-    public NoteDto updateNote(Long id, NoteDto dto) {
-
-        if (dto.getTitle().equals("err")) {
-            throw new RuntimeException("test rollback");
-        }
+    public NoteResponseDto updateNote(Long id, NoteUpdateDto dto) {
 
         Note existing = noteRepository.findById(id)
-                .orElseThrow(() -> new NoteNotFoundException(id));
+                .orElseThrow(() -> new ResourceNotFoundException("Note not found", id));
 
-        existing.setTitle(dto.getTitle());
-        existing.setContent(dto.getContent());
-        existing.setCompleted(dto.isCompleted());
-
+        noteMapper.updateEntityFromDto(dto, existing);
         Note saved = noteRepository.save(existing);
-        return noteMapper.toDto(saved);
+
+        return noteMapper.toResponseDto(saved);
     }
 
 
@@ -95,62 +93,74 @@ public class NoteService {
     }
 
     @Cacheable(value = "notesPaged", key = "#page + '-' + #size")
-    public ApiResponse<Page<NoteDto>> getNotesPaged(int page, int size) {
+    public ApiResponse<Page<NoteResponseDto>> getNotesPaged(int page, int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
         Page<Note> notes = noteRepository.findAllByDeletedAtIsNull(pageable);
 
-        Page<NoteDto> dtoPage = notes.map(noteMapper::toDto);
+        Page<NoteResponseDto> dtoPage = notes.map(noteMapper::toResponseDto);
 
         return ApiResponse.success(dtoPage, "Notes listed with pagination");
     }
 
 
-    public List<NoteDto> filterNotes(String keyword, Boolean completed, String sortDir) {
+    public List<NoteResponseDto> filterNotes(String keyword, Boolean completed, String sortDir) {
         Sort sort = sortDir != null && sortDir.equalsIgnoreCase("desc") ?
                 Sort.by("createdAt").descending() :
                 Sort.by("createdAt").ascending();
 
         return noteRepository.filterNotes(keyword, completed, sort)
                 .stream()
-                .map(noteMapper::toDto)
+                .map(noteMapper::toResponseDto)
                 .toList();
     }
 
-    public Page<NoteDto> searchNotes(String keyword, Boolean completed, Pageable pageable) {
-        return noteRepository.searchNotes(keyword, completed, pageable)
-                .map(noteMapper::toDto);
+    public Page<NoteResponseDto> searchNotes(String keyword, Pageable pageable) {
+        Page<Note> page = noteRepository.searchNotes(keyword, pageable);
+
+        return page.map(noteMapper::toResponseDto);
     }
 
-    public ApiResponse<NoteDto> createNote(NoteDto dto) {
+    public ApiResponse<NoteResponseDto> createNote(NoteCreateDto dto) {
 
         ValidationUtils.requireNotBlank(dto.getTitle(), "title");
         ValidationUtils.requireNotBlank(dto.getContent(), "content");
 
         Note note = noteMapper.toEntity(dto);
-        noteRepository.save(note);
+        Note savedNote = noteRepository.save(note);
+        NoteResponseDto responseDto = noteMapper.toResponseDto(savedNote);
 
-        return ApiResponse.success(null, "Note deleted successfully");
+        return ApiResponse.success(responseDto, "Note created successfully");
     }
 
     @Cacheable(value = "noteById", key = "#id")
-    public NoteDto getNoteById(Long id) {
+    public NoteResponseDto getNoteById(Long id) {
 
         Note note = noteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Note not found with id: " + id));
 
-        return noteMapper.toDto(note);
+        return noteMapper.toResponseDto(note);
     }
     @Transactional
-    public ApiResponse<NoteDto> restoreNote(Long id) {
+    public ApiResponse<NoteResponseDto> restoreNote(Long id) {
         Note note = noteRepository.findByIdAndDeletedAtIsNotNull(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Deleted Note", id));
 
         note.setDeletedAt(null); // geri getirdik
         Note saved = noteRepository.save(note);
 
-        return ApiResponse.success(noteMapper.toDto(saved), "Note restored successfully");    }
+        return ApiResponse.success(noteMapper.toResponseDto(saved), "Note restored successfully");    }
+
+    @Transactional
+    public  ApiResponse<Void> hardDelete(Long id){
+        Note note = noteRepository.findByIdAndDeletedAtIsNotNull(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No Note Found", id));
+        noteRepository.delete(note);
+
+        return ApiResponse.success(null, "Note deleted successfully (hard delete)");
+
+    }
 
 
 }

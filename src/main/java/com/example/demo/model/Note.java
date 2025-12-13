@@ -35,12 +35,6 @@ public class Note {
         this.createdAt = createdAt;
     }
 
-    public Note(NoteDto dto) {
-        this.title = dto.getTitle();
-        this.content = dto.getContent();
-        this.completed = dto.isCompleted();
-    }
-
     @PrePersist
     protected void onCreate() {
         Date now = new Date();
@@ -75,9 +69,6 @@ public class Note {
     public Date getCreatedAt() {
         return createdAt;
     }
-    private void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
-    }
     public String getTitle() {
         return title;
     }
@@ -103,7 +94,4 @@ public class Note {
         return updatedAt;
     }
 
-    public void setUpdatedAt(Date updatedAt) {
-        this.updatedAt = updatedAt;
-    }
 }

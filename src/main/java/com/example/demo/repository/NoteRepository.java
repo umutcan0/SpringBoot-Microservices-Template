@@ -33,12 +33,16 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
               OR LOWER(n.content) LIKE LOWER(CONCAT('%', :keyword, '%')))
        AND (:completed IS NULL OR n.completed = :completed)
        """)
-    Page<Note> searchNotes(@Param("keyword") String keyword,
-                           @Param("completed") Boolean completed,
-                           Pageable pageable);
     boolean existsByTitle(String title);
     List<Note> findAllByDeletedAtIsNull();
     Optional<Note> findByIdAndDeletedAtIsNotNull(Long id);
     Page<Note> findAllByDeletedAtIsNull(Pageable pageable);
+    @Query("""
+       SELECT n FROM Note n 
+       WHERE n.deletedAt IS NULL
+       AND (LOWER(n.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(n.content) LIKE LOWER(CONCAT('%', :keyword, '%')))
+       """)
+    Page<Note> searchNotes(@Param("keyword") String keyword, Pageable pageable);
 
 }
